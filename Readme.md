@@ -22,11 +22,15 @@ Options:
 - [Visit Kibana](http://localhost:5601/)
 
 
-## Ubuntu Server
+## Postgres Server
 
 ### Usage
 
 - Setup ansible host in `/etc/ansible/hosts`
   ```
   dbinstance ansible_host=<ec2-instance-ip> ansible_user=ubuntu ansible_ssh_private_key_file=<path-to-private-key>
+  ```
+- Run Ansible playbook
+  ```
+  $ ansible-playbook postgres_playbook.yml  
   ```
