@@ -1,0 +1,86 @@
+version: '2.0'
+services:
+
+  blue_web:
+    image: nginx
+    container_name: blue_web
+    volumes:
+      - ./resources/blue/:/usr/share/nginx/html
+      - filebeat:/var/log/nginx
+    networks:
+      - web
+  green_web:
+    image: nginx
+    container_name: green_web
+    volumes:
+      - ./resources/green/:/usr/share/nginx/html/
+      - filebeat:/var/log/nginx
+    networks:
+      - web
+
+  haproxy:
+    image: eeacms/haproxy
+    container_name: haproxy
+    depends_on:
+      - blue_web
+      - green_web
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./resources/haproxy/:/usr/local/etc/haproxy/:ro
+    networks:
+      - web
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.9.1
+    container_name: filebeat
+    volumes:
+      - filebeat:/var/data
+      - ./resources/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    links:
+      - logstash
+    networks:
+      - web
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.9.1
+    container_name: logstash
+    volumes:
+      - ./resources/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./resources/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - web
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    container_name: elasticsearch
+    volumes:
+      - ./resources/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - '9200:9200'
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - web
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.1
+    container_name: kibana
+    volumes:
+      - ./resources/kibana/:/usr/share/kibana/config:ro
+    ports:
+      - 5601:5601
+    networks:
+      - web
+
+volumes:
+  elasticsearch:
+    driver: local
+  filebeat:
+
+networks:
+  web:
+    driver: bridge

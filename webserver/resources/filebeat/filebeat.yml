@@ -1,0 +1,10 @@
+filebeat.modules:
+- module: nginx
+filebeat.inputs:
+- type: log
+  paths:
+  - '/var/data/access.log'
+  json.message_key: log
+  json.keys_under_root: true
+output.logstash:
+  hosts: ["logstash"]
